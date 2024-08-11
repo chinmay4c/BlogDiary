@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog Diary</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>My Blog Diary</h1>
+    </header>
+    <main>
+        <section id="new-entry">
+            <h2>New Entry</h2>
+            <form id="entry-form">
+                <input type="text" id="entry-title" placeholder="Title" required>
+                <textarea id="entry-content" placeholder="Write your entry here..." required></textarea>
+                <button type="submit">Add Entry</button>
+            </form>
+        </section>
+        <section id="entries">
+            <h2>Entries</h2>
+            <div id="entry-list"></div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
