@@ -3,27 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Blog Diary</title>
+    <title>Blog Diary</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h1>My Blog Diary</h1>
-    </header>
-    <main>
-        <section id="new-entry">
-            <h2>New Entry</h2>
-            <form id="entry-form">
-                <input type="text" id="entry-title" placeholder="Title" required>
-                <textarea id="entry-content" placeholder="Write your entry here..." required></textarea>
-                <button type="submit">Add Entry</button>
-            </form>
-        </section>
-        <section id="entries">
-            <h2>Entries</h2>
-            <div id="entry-list"></div>
-        </section>
-    </main>
+    <div class="container">
+        <header>
+            <h1>Blog Diary</h1>
+        </header>
+        <nav>
+            <input type="text" id="search" placeholder="Search entries...">
+            <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+        </nav>
+        <main>
+            <section id="new-entry">
+                <h2>New Entry</h2>
+                <form id="entry-form">
+                    <input type="text" id="entry-title" placeholder="Title" required>
+                    <textarea id="entry-content" placeholder="Write your entry here..." required></textarea>
+                    <input type="text" id="entry-tags" placeholder="Tags (comma-separated)">
+                    <button type="submit">Add Entry</button>
+                </form>
+            </section>
+            <section id="entries">
+                <h2>Entries</h2>
+                <div id="entry-list"></div>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2024 Advanced Blog Diary</p>
+        </footer>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
