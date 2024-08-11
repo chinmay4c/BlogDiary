@@ -198,4 +198,113 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoggedOutState();
     }
 
+    function showLoggedInState() {
+        authForms.style.display = 'none';
+        entrySection.style.display = 'block';
+        userInfo.style.display = 'block';
+        logoutButton.style.display = 'inline-block';
+        document.getElementById('username').textContent = currentUser.username;
+        displayEntries();
+        updateStatistics();
+        displayCategories();
+    }
+
+    function showLoggedOutState() {
+        authForms.style.display = 'block';
+        entrySection.style.display = 'none';
+        userInfo.style.display = 'none';
+        logoutButton.style.display = 'none';
+    }
+
+    async function updateStatistics() {
+        if (!currentUser) return;
+
+        try {
+            const entries = await db.entries.where('userId').equals(currentUser.id).toArray();
+            const totalEntries = entries.length;
+            const totalWords = entries.reduce((sum, entry) => sum + entry.content.split(/\s+/).length, 0);
+
+            document.getElementById('total-entries').textContent = totalEntries;
+            document.getElementById('total-words').textContent = totalWords;
+        } catch (error) {
+            console.error('Statistics update error:', error);
+        }
+    }
+
+    async function displayCategories() {
+        if (!currentUser) return;
+
+        try {
+            const entries = await db.entries.where('userId').equals(currentUser.id).toArray();
+            const categories = [...new Set(entries.map(entry => entry.category))];
+
+            const categoryList = document.getElementById('category-list');
+            categoryList.innerHTML = '';
+
+            categories.forEach(category => {
+                const li = document.createElement('li');
+                li.textContent = category;
+                li.addEventListener('click', () => filterByCategory(category));
+                categoryList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Categories display error:', error);
+        }
+    }
+
+    async function filterByCategory(category) {
+        if (!currentUser) return;
+
+        try {
+            const entries = await db.entries.where('userId').equals(currentUser.id).toArray();
+            const filteredEntries = entries.filter(entry => entry.category === category);
+            displayFilteredEntries(filteredEntries);
+        } catch (error) {
+            console.error('Category filter error:', error);
+            alert('An error occurred while filtering entries');
+        }
+    }
+
+    window.editEntry = async (entryId) => {
+        try {
+            const entry = await db.entries.get(entryId);
+            document.getElementById('entry-title').value = entry.title;
+            document.getElementById('entry-category').value = entry.category;
+            simplemde.value(entry.content);
+            document.getElementById('entry-tags').value = entry.tags.join(', ');
+
+            // Change form submission to update instead of add
+            entryForm.onsubmit = async (e) => {
+                e.preventDefault();
+                entry.title = document.getElementById('entry-title').value;
+                entry.category = document.getElementById('entry-category').value;
+                entry.content = simplemde.value();
+                entry.tags = document.getElementById('entry-tags').value.split(',').map(tag => tag.trim());
+
+                await db.entries.update(entryId, entry);
+                entryForm.reset();
+                simplemde.value('');
+                displayEntries();
+                updateStatistics();
+                // Reset form submission to add new entries
+                entryForm.onsubmit = handleNewEntry;
+            };
+        } catch (error) {
+            console.error('Edit entry error:', error);
+            alert('An error occurred while editing the entry');
+        }
+    };
+
+    window.deleteEntry = async (entryId) => {
+        if (confirm('Are you sure you want to delete this entry?')) {
+            try {
+                await db.entries.delete(entryId);
+                displayEntries();
+                updateStatistics();
+            } catch (error) {
+                console.error('Delete entry error:', error);
+                alert('An error occurred while deleting the entry');
+            }
+        }
+    };
 });
