@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const existingUser = await db.users.where('email').equals(email).first();
-            if (existingUser) {
+           if (existingUser) {
                 alert('Email already registered');
                 return;
             }
@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             simplemde.value('');
             displayEntries();
             updateStatistics();
+            updateTagCloud();
         } catch (error) {
             console.error('New entry error:', error);
             alert('An error occurred while saving the entry');
@@ -121,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             entries.forEach(entry => {
                 const entryElement = document.createElement('div');
-                entryElement.classList.add('entry');
+                entryElement.classList.add('entry', 'animate__animated', 'animate__fadeIn');
                 entryElement.innerHTML = `
                     <h3>${entry.title}</h3>
                     <div class="entry-meta">
@@ -167,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         entryList.innerHTML = '';
         entries.forEach(entry => {
             const entryElement = document.createElement('div');
-            entryElement.classList.add('entry');
+            entryElement.classList.add('entry', 'animate__animated', 'animate__fadeIn');
             entryElement.innerHTML = `
                 <h3>${entry.title}</h3>
                 <div class="entry-meta">
@@ -207,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displayEntries();
         updateStatistics();
         displayCategories();
+        updateTagCloud();
     }
 
     function showLoggedOutState() {
@@ -223,9 +225,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const entries = await db.entries.where('userId').equals(currentUser.id).toArray();
             const totalEntries = entries.length;
             const totalWords = entries.reduce((sum, entry) => sum + entry.content.split(/\s+/).length, 0);
+            const categoryCounts = entries.reduce((counts, entry) => {
+                counts[entry.category] = (counts[entry.category] || 0) + 1;
+                return counts;
+            }, {});
+            const favoriteCategory = Object.entries(categoryCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0];
 
             document.getElementById('total-entries').textContent = totalEntries;
             document.getElementById('total-words').textContent = totalWords;
+            document.getElementById('favorite-category').textContent = favoriteCategory || '-';
         } catch (error) {
             console.error('Statistics update error:', error);
         }
@@ -265,6 +273,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function updateTagCloud() {
+        if (!currentUser) return;
+
+        try {
+            const entries = await db.entries.where('userId').equals(currentUser.id).toArray();
+            const tagCounts = entries.flatMap(entry => entry.tags).reduce((counts, tag) => {
+                counts[tag] = (counts[tag] || 0) + 1;
+                return counts;
+            }, {});
+
+            const tagCloud = document.getElementById('tag-cloud');
+            tagCloud.innerHTML = '';
+
+            Object.entries(tagCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .forEach(([tag, count]) => {
+                    const tagElement = document.createElement('span');
+                    tagElement.classList.add('tag');
+                    tagElement.textContent = tag;
+                    tagElement.style.fontSize = `${Math.max(0.8, Math.min(2, 0.8 + count * 0.2))}em`;
+                    tagElement.addEventListener('click', () => filterByTag(tag));
+                    tagCloud.appendChild(tagElement);
+                });
+        } catch (error) {
+            console.error('Tag cloud update error:', error);
+        }
+    }
+
+    async function filterByTag(tag) {
+        if (!currentUser) return;
+
+        try {
+            const entries = await db.entries.where('userId').equals(currentUser.id).toArray();
+            const filteredEntries = entries.filter(entry => entry.tags.includes(tag));
+            displayFilteredEntries(filteredEntries);
+        } catch (error) {
+            console.error('Tag filter error:', error);
+            alert('An error occurred while filtering entries');
+        }
+    }
+
     window.editEntry = async (entryId) => {
         try {
             const entry = await db.entries.get(entryId);
@@ -286,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 simplemde.value('');
                 displayEntries();
                 updateStatistics();
+                updateTagCloud();
                 // Reset form submission to add new entries
                 entryForm.onsubmit = handleNewEntry;
             };
@@ -301,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await db.entries.delete(entryId);
                 displayEntries();
                 updateStatistics();
+                updateTagCloud();
             } catch (error) {
                 console.error('Delete entry error:', error);
                 alert('An error occurred while deleting the entry');
