@@ -6,36 +6,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let entries = JSON.parse(localStorage.getItem('blogEntries')) || [];
 
+    // Initialize Quill rich text editor
+    const quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+                ['clean']
+            ]
+        }
+    });
+
     displayEntries();
 
     entryForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
         const titleInput = document.getElementById('entry-title');
-        const contentInput = document.getElementById('entry-content');
+        const categoryInput = document.getElementById('entry-category');
         const tagsInput = document.getElementById('entry-tags');
+        const imageInput = document.getElementById('entry-image');
 
         const newEntry = {
             title: titleInput.value,
-            content: contentInput.value,
+            category: categoryInput.value,
+            content: quill.root.innerHTML,
             tags: tagsInput.value.split(',').map(tag => tag.trim()),
-            date: new Date().toLocaleString()
+            date: new Date().toLocaleString(),
+            image: null
         };
 
+        if (imageInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                newEntry.image = e.target.result;
+                saveNewEntry(newEntry);
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+        } else {
+            saveNewEntry(newEntry);
+        }
+    });
+
+    function saveNewEntry(newEntry) {
         entries.unshift(newEntry);
         saveEntries();
         displayEntries();
 
-        titleInput.value = '';
-        contentInput.value = '';
-        tagsInput.value = '';
-    });
+        // Reset form
+        entryForm.reset();
+        quill.setContents([]);
+    }
 
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
         const filteredEntries = entries.filter(entry =>
             entry.title.toLowerCase().includes(searchTerm) ||
             entry.content.toLowerCase().includes(searchTerm) ||
+            entry.category.toLowerCase().includes(searchTerm) ||
             entry.tags.some(tag => tag.toLowerCase().includes(searchTerm))
         );
         displayEntries(filteredEntries);
@@ -55,11 +94,15 @@ document.addEventListener('DOMContentLoaded', () => {
             entryElement.classList.add('entry');
             entryElement.innerHTML = `
                 <h3>${entry.title}</h3>
-                <p>${entry.content}</p>
+                <div class="entry-meta">
+                    <span class="entry-category">${entry.category}</span>
+                    <small>${entry.date}</small>
+                </div>
+                <div class="entry-content">${entry.content}</div>
+                ${entry.image ? `<img src="${entry.image}" alt="Entry image" class="entry-image">` : ''}
                 <div class="entry-tags">
                     ${entry.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
                 </div>
-                <small>${entry.date}</small>
                 <button onclick="deleteEntry(${index})">Delete</button>
                 <button onclick="editEntry(${index})">Edit</button>
             `;
@@ -72,23 +115,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.deleteEntry = (index) => {
-        entries.splice(index, 1);
-        saveEntries();
-        displayEntries();
+        if (confirm('Are you sure you want to delete this entry?')) {
+            entries.splice(index, 1);
+            saveEntries();
+            displayEntries();
+        }
     };
 
     window.editEntry = (index) => {
         const entry = entries[index];
         const titleInput = document.getElementById('entry-title');
-        const contentInput = document.getElementById('entry-content');
+        const categoryInput = document.getElementById('entry-category');
         const tagsInput = document.getElementById('entry-tags');
 
         titleInput.value = entry.title;
-        contentInput.value = entry.content;
+        categoryInput.value = entry.category;
+        quill.root.innerHTML = entry.content;
         tagsInput.value = entry.tags.join(', ');
 
         entries.splice(index, 1);
         saveEntries();
         displayEntries();
+
+        window.scrollTo(0, 0);
     };
 });
