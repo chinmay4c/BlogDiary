@@ -204,3 +204,100 @@ button:hover {
 #tag-cloud .tag {
     cursor: pointer;
 }
+
+footer {
+    background-color: var(--secondary-color);
+    color: #fff;
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Dark theme */
+body.dark-theme {
+    --primary-color: #bb86fc;
+    --secondary-color: #3700b3;
+    --accent-color: #03dac6;
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+    --entry-background: #1e1e1e;
+    --shadow-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.entry {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+    }
+
+    #sidebar, #content {
+        width: 100%;
+    }
+}
+
+/* SimpleMDE customization */
+.CodeMirror {
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    transition: all var(--transition-speed);
+}
+
+.CodeMirror:focus-within {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(3, 218, 198, 0.2);
+}
+
+.editor-toolbar {
+    border-radius: 8px 8px 0 0;
+    border: 2px solid #e0e0e0;
+    border-bottom: none;
+}
+
+/* Additional cool effects */
+.entry-content {
+    position: relative;
+    overflow: hidden;
+}
+
+.entry-content::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, var(--entry-background));
+}
+
+#sidebar h3, #content h2 {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+#sidebar h3::after, #content h2::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 50%;
+    height: 3px;
+    background-color: var(--accent-color);
+    transition: width var(--transition-speed);
+}
+
+#sidebar h3:hover::after, #content h2:hover::after {
+    width: 100%;
+}
